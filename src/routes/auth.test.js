@@ -28,6 +28,33 @@ describe('POST /api/login', () => {
     expect(res.body).toEqual(successPayload);
   });
 
+  test('returns 200 for a username with surrounding whitespace', async () => {
+    const res = await request(app)
+      .post('/api/login')
+      .send({ username: `  ${validUsername}  `, password: validPassword });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(successPayload);
+  });
+
+  test('returns 400 for a whitespace-only username', async () => {
+    const res = await request(app)
+      .post('/api/login')
+      .send({ username: '   ', password: validPassword });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Username and password are required.' });
+  });
+
+  test('returns 401 when the password has surrounding whitespace (password is not trimmed)', async () => {
+    const res = await request(app)
+      .post('/api/login')
+      .send({ username: validUsername, password: ` ${validPassword} ` });
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'Incorrect username or password.' });
+  });
+
   test('returns 401 for a valid username with the wrong password', async () => {
     const res = await request(app)
       .post('/api/login')
@@ -72,5 +99,28 @@ describe('POST /api/login', () => {
       .send({ username: validUsername, password: '' });
     expect(resEmptyPassword.status).toBe(400);
     expect(resEmptyPassword.body).toEqual({ error: 'Username and password are required.' });
+  });
+});
+
+describe('JSON error contract', () => {
+  test('returns a JSON 400 for a malformed JSON body', async () => {
+    const res = await request(app)
+      .post('/api/login')
+      .set('Content-Type', 'application/json')
+      .send('{"username":');
+
+    expect(res.status).toBe(400);
+    expect(res.type).toBe('application/json');
+    expect(res.body).toEqual({ error: 'Malformed JSON request body.' });
+  });
+
+  test('returns a JSON 404 for an unmatched route', async () => {
+    const res = await request(app)
+      .post('/api/logn')
+      .send({ username: 'bankuser.one@acmebank.com', password: 'Password123' });
+
+    expect(res.status).toBe(404);
+    expect(res.type).toBe('application/json');
+    expect(res.body).toEqual({ error: 'Not found.' });
   });
 });

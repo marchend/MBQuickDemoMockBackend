@@ -22,54 +22,24 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - username
-                - password
-              properties:
-                username:
-                  type: string
-                  example: bankuser.one@acmebank.com
-                password:
-                  type: string
-                  example: Password123
+              $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
           description: Login succeeded.
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - token
-                  - customerId
-                  - firstName
-                properties:
-                  token:
-                    type: string
-                    example: mock-token-cust-1002
-                  customerId:
-                    type: string
-                    example: cust-1002
-                  firstName:
-                    type: string
-                    example: Bankuser
+                $ref: '#/components/schemas/LoginResponse'
               example:
                 token: mock-token-cust-1002
                 customerId: cust-1002
                 firstName: Bankuser
         '400':
-          description: Missing or empty username/password.
+          description: Missing or empty username/password, or a malformed JSON body.
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - error
-                properties:
-                  error:
-                    type: string
-                    example: Username and password are required.
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error: Username and password are required.
         '401':
@@ -77,12 +47,52 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - error
-                properties:
-                  error:
-                    type: string
-                    example: Incorrect username or password.
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error: Incorrect username or password.
+        '404':
+          description: Unmatched route.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Not found.
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: bankuser.one@acmebank.com
+        password:
+          type: string
+          example: Password123
+    LoginResponse:
+      type: object
+      required:
+        - token
+        - customerId
+        - firstName
+      properties:
+        token:
+          type: string
+          example: mock-token-cust-1002
+        customerId:
+          type: string
+          example: cust-1002
+        firstName:
+          type: string
+          example: Bankuser
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: Username and password are required.
