@@ -6,6 +6,11 @@ const { users } = require('../data/mockData');
 // signature) -- this is intentionally out of scope for the demo mock.
 function requireAuth(req, res, next) {
   const authHeader = req.get('Authorization') || '';
+  // The scheme match is deliberately case-sensitive and a `Bearer ` prefix
+  // with an empty token is deliberately rejected: both fall under the AC's
+  // "malformed -> 401". This knowingly deviates from RFC 6750, which defines
+  // the scheme as case-insensitive. Both behaviours are pinned by name in
+  // src/middleware/auth.test.js so changing them stays a conscious decision.
   const match = /^Bearer (.+)$/.exec(authHeader);
 
   if (!match) {

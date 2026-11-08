@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../app');
+const mockData = require('../data/mockData');
 
 describe('GET /api/home', () => {
   const validToken = 'mock-token-cust-1002';
@@ -133,5 +134,28 @@ describe('GET /api/home', () => {
 
     expect(res.status).toBe(401);
     expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+
+  // A fixture gap for an already-authenticated customer is OUR bug, not the
+  // client's: it must not masquerade as a 401, and must not degrade into a
+  // 200 with an empty landing screen.
+  test.each([
+    ['customers', 'customers'],
+    ['accounts', 'accountsByCustomerId'],
+    ['recentTransactions', 'transactionsByCustomerId'],
+  ])('returns 500 (not 401, not an empty 200) when the %s fixture is missing', async (_label, fixtureName) => {
+    const fixture = mockData[fixtureName];
+    const saved = fixture['cust-1002'];
+    delete fixture['cust-1002'];
+
+    try {
+      const res = await request(app).get('/api/home').set('Authorization', `Bearer ${validToken}`);
+
+      expect(res.status).toBe(500);
+      expect(res.type).toBe('application/json');
+      expect(res.body).toEqual({ error: 'Internal server error.' });
+    } finally {
+      fixture['cust-1002'] = saved;
+    }
   });
 });

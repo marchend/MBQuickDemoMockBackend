@@ -10,11 +10,19 @@ router.get('/', (req, res) => {
   const { customerId } = req;
 
   const customer = customers[customerId];
-  const accounts = accountsByCustomerId[customerId] || [];
-  const recentTransactions = transactionsByCustomerId[customerId] || [];
+  const accounts = accountsByCustomerId[customerId];
+  const recentTransactions = transactionsByCustomerId[customerId];
 
-  if (!customer) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  // requireAuth has already matched the bearer token against mockData.users
+  // and set req.customerId, so any missing fixture here means a user exists
+  // in `users` with no matching customers/accounts/transactions entry -- an
+  // inconsistency in our own fixture data, not a client auth problem. A 401
+  // would report that as "your token is bad" and send clients debugging a
+  // token that is actually fine, and `|| []` fallbacks would hide it behind
+  // a valid-looking empty landing screen. Fail loudly instead; the AC only
+  // requires 401 for *token* failures.
+  if (!customer || !accounts || !recentTransactions) {
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 
   return res.status(200).json({
