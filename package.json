@@ -1,0 +1,19 @@
+{
+  "name": "acme-bank-mock-backend",
+  "version": "1.0.0",
+  "description": "Acme Bank Mock Backend - demo-grade Express service with no database and no real identity provider.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "jest"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  }
+}
