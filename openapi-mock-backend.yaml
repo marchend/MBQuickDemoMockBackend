@@ -9,6 +9,33 @@ info:
 servers:
   - url: http://localhost:3000
 paths:
+  /api/home:
+    get:
+      operationId: getHome
+      summary: Fetch everything the landing screen shows in one call
+      description: >
+        Contract: acme-mock-backend-home-v1. Returns the authenticated
+        customer, their accounts, and their recent transactions in a single
+        response. The bearer token (issued by POST /api/login) resolves to a
+        customerId, which selects the customer/accounts/transactions from
+        fixed in-memory fixture data.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The authenticated customer's landing screen data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeResponse'
+        '401':
+          description: Missing, malformed, or unknown bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Unauthorized
   /api/login:
     post:
       operationId: login
@@ -59,7 +86,109 @@ paths:
               example:
                 error: Not found.
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
   schemas:
+    HomeResponse:
+      type: object
+      required:
+        - customer
+        - accounts
+        - recentTransactions
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        recentTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+    Customer:
+      type: object
+      required:
+        - customerId
+        - firstName
+        - lastName
+        - phoneNumber
+        - authProvider
+      properties:
+        customerId:
+          type: string
+          example: cust-1002
+        firstName:
+          type: string
+          example: Bankuser
+        lastName:
+          type: string
+          example: One
+        phoneNumber:
+          type: string
+          example: '+1-647-555-0198'
+        authProvider:
+          type: string
+          example: Okta
+    Account:
+      type: object
+      required:
+        - accountId
+        - name
+        - type
+        - maskedNumber
+        - balance
+        - availableBalance
+        - currencyCode
+      properties:
+        accountId:
+          type: string
+          example: acct-11
+        name:
+          type: string
+          example: Everyday Chequing
+        type:
+          type: string
+          enum: [CHEQUING, SAVINGS, CREDIT, INVESTMENT]
+          example: CHEQUING
+        maskedNumber:
+          type: string
+          example: '3310'
+        balance:
+          type: number
+          format: double
+          example: 1542.88
+        availableBalance:
+          type: number
+          format: double
+          example: 1542.88
+        currencyCode:
+          type: string
+          example: USD
+    Transaction:
+      type: object
+      required:
+        - transactionId
+        - description
+        - amount
+        - postedDate
+      properties:
+        transactionId:
+          type: string
+          example: txn-105
+        description:
+          type: string
+          example: Toronto Hydro
+        amount:
+          type: number
+          format: double
+          example: -148.22
+        postedDate:
+          type: string
+          format: date
+          example: '2024-05-20'
     LoginRequest:
       type: object
       required:

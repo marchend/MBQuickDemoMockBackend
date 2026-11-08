@@ -1,11 +1,14 @@
 const express = require('express');
 
 const authRoutes = require('./routes/auth');
+const homeRoutes = require('./routes/home');
+const { requireAuth } = require('./middleware/auth');
 
 const app = express();
 
 app.use(express.json());
 app.use('/api', authRoutes);
+app.use('/api/home', requireAuth, homeRoutes);
 
 // Every error path must stay application/json, as the contract declares.
 // Without these, Express's defaults return HTML for unmatched routes and for
