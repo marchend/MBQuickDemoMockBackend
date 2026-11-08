@@ -9,6 +9,114 @@ info:
 servers:
   - url: http://localhost:3000
 paths:
+  /api/home:
+    get:
+      operationId: getHome
+      summary: Fetch everything the landing screen shows in one call
+      description: >
+        Contract: acme-mock-backend-home-v1. Returns the authenticated
+        customer, their accounts, and their recent transactions in a single
+        response. The bearer token (issued by POST /api/login) resolves to a
+        customerId, which selects the customer/accounts/transactions from
+        fixed in-memory fixture data.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: >
+            The authenticated customer's landing screen data. The example below
+            is the literal payload the mock returns for the demo user, including
+            the array ordering the contract requires (accounts acct-11..acct-14,
+            transactions most recent first); clients should build fixtures
+            against it rather than re-transcribing the ticket.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeResponse'
+              example:
+                customer:
+                  customerId: cust-1002
+                  firstName: Bankuser
+                  lastName: One
+                  phoneNumber: '+1-647-555-0198'
+                  authProvider: Okta
+                accounts:
+                  - accountId: acct-11
+                    name: Everyday Chequing
+                    type: CHEQUING
+                    maskedNumber: '3310'
+                    balance: 1542.88
+                    availableBalance: 1542.88
+                    currencyCode: USD
+                  - accountId: acct-12
+                    name: Rainy Day Savings
+                    type: SAVINGS
+                    maskedNumber: '7765'
+                    balance: 6120.00
+                    availableBalance: 6120.00
+                    currencyCode: USD
+                  - accountId: acct-13
+                    name: Cashback Mastercard
+                    type: CREDIT
+                    maskedNumber: '4490'
+                    balance: -243.10
+                    availableBalance: 4756.90
+                    currencyCode: USD
+                  - accountId: acct-14
+                    name: TFSA Investment
+                    type: INVESTMENT
+                    maskedNumber: '8821'
+                    balance: 23410.55
+                    availableBalance: 23410.55
+                    currencyCode: USD
+                recentTransactions:
+                  - transactionId: txn-105
+                    description: Toronto Hydro
+                    amount: -148.22
+                    postedDate: '2024-05-20'
+                  - transactionId: txn-104
+                    description: Payroll - Acme Corp
+                    amount: 2750.00
+                    postedDate: '2024-05-17'
+                  - transactionId: txn-103
+                    description: Loblaws
+                    amount: -86.43
+                    postedDate: '2024-05-15'
+                  - transactionId: txn-102
+                    description: Tim Hortons
+                    amount: -4.75
+                    postedDate: '2024-05-14'
+                  - transactionId: txn-101
+                    description: Transfer to Savings
+                    amount: -500.00
+                    postedDate: '2024-05-10'
+        '401':
+          description: Missing, malformed, or unknown bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Unauthorized
+        '404':
+          description: Unmatched route (e.g. /api/home/foo).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Not found.
+        '500':
+          description: >
+            Fixture inconsistency on the server side -- the token resolved to a
+            customerId that has no customer/accounts/transactions entry. Not a
+            client auth problem; the token is valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Internal server error.
   /api/login:
     post:
       operationId: login
@@ -59,7 +167,109 @@ paths:
               example:
                 error: Not found.
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
   schemas:
+    HomeResponse:
+      type: object
+      required:
+        - customer
+        - accounts
+        - recentTransactions
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        recentTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+    Customer:
+      type: object
+      required:
+        - customerId
+        - firstName
+        - lastName
+        - phoneNumber
+        - authProvider
+      properties:
+        customerId:
+          type: string
+          example: cust-1002
+        firstName:
+          type: string
+          example: Bankuser
+        lastName:
+          type: string
+          example: One
+        phoneNumber:
+          type: string
+          example: '+1-647-555-0198'
+        authProvider:
+          type: string
+          example: Okta
+    Account:
+      type: object
+      required:
+        - accountId
+        - name
+        - type
+        - maskedNumber
+        - balance
+        - availableBalance
+        - currencyCode
+      properties:
+        accountId:
+          type: string
+          example: acct-11
+        name:
+          type: string
+          example: Everyday Chequing
+        type:
+          type: string
+          enum: [CHEQUING, SAVINGS, CREDIT, INVESTMENT]
+          example: CHEQUING
+        maskedNumber:
+          type: string
+          example: '3310'
+        balance:
+          type: number
+          format: double
+          example: 1542.88
+        availableBalance:
+          type: number
+          format: double
+          example: 1542.88
+        currencyCode:
+          type: string
+          example: USD
+    Transaction:
+      type: object
+      required:
+        - transactionId
+        - description
+        - amount
+        - postedDate
+      properties:
+        transactionId:
+          type: string
+          example: txn-105
+        description:
+          type: string
+          example: Toronto Hydro
+        amount:
+          type: number
+          format: double
+          example: -148.22
+        postedDate:
+          type: string
+          format: date
+          example: '2024-05-20'
     LoginRequest:
       type: object
       required:
