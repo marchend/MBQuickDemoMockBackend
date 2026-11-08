@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: Acme Bank Mock Backend
+  description: >
+    Demo-grade mock backend for Acme Bank. No database and no real identity
+    provider: a single demo user is authenticated against fixed in-memory
+    fixture data and issued a static opaque token.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/login:
+    post:
+      operationId: login
+      summary: Authenticate a demo user
+      description: >
+        Contract: acme-mock-backend-login-v1. Authenticates against a single
+        fixed demo user fixture. Username matching is trimmed and
+        case-insensitive; password matching is exact.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: bankuser.one@acmebank.com
+                password:
+                  type: string
+                  example: Password123
+      responses:
+        '200':
+          description: Login succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                  - customerId
+                  - firstName
+                properties:
+                  token:
+                    type: string
+                    example: mock-token-cust-1002
+                  customerId:
+                    type: string
+                    example: cust-1002
+                  firstName:
+                    type: string
+                    example: Bankuser
+              example:
+                token: mock-token-cust-1002
+                customerId: cust-1002
+                firstName: Bankuser
+        '400':
+          description: Missing or empty username/password.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+                    example: Username and password are required.
+              example:
+                error: Username and password are required.
+        '401':
+          description: Incorrect username or password.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+                    example: Incorrect username or password.
+              example:
+                error: Incorrect username or password.
